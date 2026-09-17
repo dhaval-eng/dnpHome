@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finances — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head { padding-block: 56px 32px; }
+  .page-head h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    margin: 0 0 8px;
+  }
+  .page-head p { color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+  .expense-form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    align-items: end;
+  }
+  .expense-form label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .expense-form input,
+  .expense-form select {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    box-sizing: border-box;
+  }
+  .expense-form .full-width { grid-column: 1 / -1; }
+  .form-error {
+    color: #c0392b;
+    font-size: 13.5px;
+    margin: 10px 0 0;
+    min-height: 1em;
+  }
+  @media (max-width: 700px) {
+    .expense-form { grid-template-columns: 1fr 1fr; }
+  }
+
+  .summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 420px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14.5px;
+    padding-block: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--ink-faint);
+  }
+
+  .txn-list { display: flex; flex-direction: column; }
+  .txn-row {
+    display: grid;
+    grid-template-columns: 100px 140px 1fr 100px 28px;
+    gap: 12px;
+    align-items: center;
+    padding-block: 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+  }
+  .txn-date { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); }
+  .txn-category {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent-ink);
+  }
+  .txn-desc { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .txn-amount { font-variant-numeric: tabular-nums; text-align: right; }
+  .txn-delete {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+  }
+  .txn-delete:hover { color: #c0392b; }
+  @media (max-width: 700px) {
+    .txn-row { grid-template-columns: 1fr 1fr 28px; grid-template-areas: "date cat del" "desc desc del" "amt amt del"; }
+    .txn-date { grid-area: date; }
+    .txn-category { grid-area: cat; }
+    .txn-desc { grid-area: desc; white-space: normal; }
+    .txn-amount { grid-area: amt; text-align: left; }
+    .txn-delete { grid-area: del; }
+  }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+</style>
+
+<nav class="top-nav">
+  <div class="wrap-wide row">
+    <a class="brand" href="index.html#top">DP</a>
+    <div class="links">
+      <a href="index.html#about">About</a>
+      <a href="index.html#impact">Impact</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<nav class="side-nav" aria-label="Site sections">
+  <a href="index.html#about">Bio</a>
+  <a href="blogs.html">Blogs</a>
+  <a href="finances.html" class="active">Finances</a>
+</nav>
+
+<header class="page-head wrap">
+  <h1>Finances</h1>
+  <p>A running log of personal expenses by category.</p>
+</header>
+
+<section class="wrap" style="padding-top: 0;">
+  <p class="eyebrow">Add an expense</p>
+  <form class="expense-form" id="expense-form">
+    <div>
+      <label for="date">Date</label>
+      <input type="date" id="date" required>
+    </div>
+    <div>
+      <label for="category">Category</label>
+      <select id="category" required></select>
+    </div>
+    <div>
+      <label for="amount">Amount</label>
+      <input type="number" id="amount" step="0.01" min="0" placeholder="0.00" required>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Add</button>
+    </div>
+    <div class="full-width">
+      <label for="description">Description (optional)</label>
+      <input type="text" id="description" placeholder="e.g. Costco run">
+    </div>
+  </form>
+  <p class="form-error" id="form-error"></p>
+</section>
+
+<section class="wrap">
+  <p class="eyebrow">By category</p>
+  <div class="summary" id="summary"></div>
+  <div class="summary-total">
+    <span>Total</span>
+    <span id="total">$0.00</span>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="eyebrow">All expenses</p>
+  <div class="txn-list" id="transaction-list">
+    <p class="empty">Loading…</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+  const CATEGORIES = [
+    'Groceries', 'Utilities', 'Restaurants', 'Rent', 'Taxes', 'Landscaping',
+    'Insurance', 'Healthcare', 'Entertainment', 'Subscriptions', 'Travel', 'Auto', 'Other'
+  ];
+
+  const form = document.getElementById('expense-form');
+  const dateInput = document.getElementById('date');
+  const categorySelect = document.getElementById('category');
+  const amountInput = document.getElementById('amount');
+  const descriptionInput = document.getElementById('description');
+  const list = document.getElementById('transaction-list');
+  const summary = document.getElementById('summary');
+  const totalEl = document.getElementById('total');
+  const errorEl = document.getElementById('form-error');
+
+  dateInput.valueAsDate = new Date();
+  categorySelect.innerHTML = CATEGORIES.map((c) => `<option value="${c}">${c}</option>`).join('');
+
+  function formatCurrency(n) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render(transactions) {
+    const totals = {};
+    let grandTotal = 0;
+    for (const t of transactions) {
+      const amt = Number(t.amount);
+      totals[t.category] = (totals[t.category] || 0) + amt;
+      grandTotal += amt;
+    }
+    const sortedCategories = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
+    summary.innerHTML = sortedCategories.length
+      ? sortedCategories
+          .map((cat) => `<div class="summary-row"><span>${escapeHtml(cat)}</span><span>${formatCurrency(totals[cat])}</span></div>`)
+          .join('')
+      : '<p class="empty">No expenses yet.</p>';
+    totalEl.textContent = formatCurrency(grandTotal);
+
+    list.innerHTML = transactions.length
+      ? transactions
+          .map(
+            (t) => `
+      <div class="txn-row" data-id="${t.id}">
+        <span class="txn-date">${t.date}</span>
+        <span class="txn-category">${escapeHtml(t.category)}</span>
+        <span class="txn-desc">${t.description ? escapeHtml(t.description) : ''}</span>
+        <span class="txn-amount">${formatCurrency(Number(t.amount))}</span>
+        <button class="txn-delete" title="Delete" type="button">✕</button>
+      </div>`
+          )
+          .join('')
+      : '<p class="empty">No expenses logged yet.</p>';
+  }
+
+  async function loadTransactions() {
+    const res = await fetch('/api/transactions');
+    if (!res.ok) {
+      list.innerHTML = '<p class="empty">Could not load transactions.</p>';
+      return;
+    }
+    render(await res.json());
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    if (!dateInput.value || !amountInput.value) {
+      errorEl.textContent = 'Date and amount are required.';
+      return;
+    }
+
+    const res = await fetch('/api/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: dateInput.value,
+        category: categorySelect.value,
+        description: descriptionInput.value.trim(),
+        amount: amountInput.value,
+      }),
+    });
+
+    if (!res.ok) {
+      errorEl.textContent = 'Could not save that expense.';
+      return;
+    }
+
+    form.reset();
+    dateInput.valueAsDate = new Date();
+    loadTransactions();
+  });
+
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.txn-delete');
+    if (!btn) return;
+    const id = btn.closest('.txn-row').dataset.id;
+    const res = await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' });
+    if (res.ok) loadTransactions();
+  });
+
+  loadTransactions();
+</script>
+</body>
+</html>

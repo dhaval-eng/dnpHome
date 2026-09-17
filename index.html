@@ -9,126 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 <style>
-  /* ============================================================
-     DESIGN TOKENS — change colors/fonts here, they cascade everywhere
-     ============================================================ */
-  :root {
-    --paper: #faf9f6;
-    --paper-raised: #f2f1ec;
-    --ink: #1b1f1d;
-    --ink-soft: #5c625d;
-    --ink-faint: #8b9089;
-    --line: #e0ded4;
-    --accent: #2f6f63;
-    --accent-ink: #1f4d44;
-    --accent-soft: #e4eee9;
-    --radius: 3px;
-    --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", serif;
-    --sans: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #14171a;
-      --paper-raised: #191d20;
-      --ink: #ecebe6;
-      --ink-soft: #9ba09b;
-      --ink-faint: #6a6f6a;
-      --line: #2a2e2c;
-      --accent: #6cbba9;
-      --accent-ink: #8fd0c1;
-      --accent-soft: #1c2b27;
-    }
-  }
-  :root[data-theme="dark"] {
-    --paper: #14171a;
-    --paper-raised: #191d20;
-    --ink: #ecebe6;
-    --ink-soft: #9ba09b;
-    --ink-faint: #6a6f6a;
-    --line: #2a2e2c;
-    --accent: #6cbba9;
-    --accent-ink: #8fd0c1;
-    --accent-soft: #1c2b27;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 17px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .reveal { animation: rise 0.6s ease both; }
-    .reveal.d1 { animation-delay: .08s; }
-    .reveal.d2 { animation-delay: .16s; }
-    .reveal.d3 { animation-delay: .24s; }
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-  }
-
-  a { color: var(--accent-ink); }
-
-  .wrap {
-    max-width: 780px;
-    margin: 0 auto;
-    padding-inline: 24px;
-  }
-  .wrap-wide {
-    max-width: 920px;
-    margin: 0 auto;
-    padding-inline: 24px;
-  }
-
-  /* ---------- nav ---------- */
-  nav {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: color-mix(in srgb, var(--paper) 88%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  nav .row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-block: 14px;
-    gap: 16px;
-  }
-  nav .brand {
-    font-family: var(--mono);
-    font-size: 14px;
-    letter-spacing: 0.02em;
-    color: var(--ink);
-    text-decoration: none;
-    font-weight: 500;
-  }
-  nav .links {
-    display: flex;
-    gap: 22px;
-    flex-wrap: wrap;
-  }
-  nav .links a {
-    font-family: var(--mono);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ink-soft);
-    text-decoration: none;
-  }
-  nav .links a:hover { color: var(--accent-ink); }
-
   /* ---------- hero ---------- */
   header.hero {
     padding-block: 64px 56px;
@@ -197,23 +79,6 @@
 
   @media (max-width: 560px) {
     .hero-row { flex-direction: column; align-items: flex-start; }
-  }
-
-  /* ---------- section shell ---------- */
-  section { padding-block: 48px; border-top: 1px solid var(--line); }
-  .eyebrow {
-    font-family: var(--mono);
-    font-size: 12.5px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: 0 0 18px;
-  }
-  section h2 {
-    font-family: var(--serif);
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0 0 20px;
   }
 
   /* ---------- about ---------- */
@@ -337,37 +202,12 @@
     flex-wrap: wrap;
     margin-top: 22px;
   }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 18px;
-    border-radius: var(--radius);
-    font-size: 14.5px;
-    text-decoration: none;
-    font-weight: 500;
-    border: 1px solid var(--line);
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: #fbfffd;
-    border-color: var(--accent);
-  }
-  .btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
-  .btn-ghost { color: var(--ink); }
-  .btn-ghost:hover { border-color: var(--ink-faint); }
-
-  footer {
-    padding-block: 28px 48px;
-    font-size: 13px;
-    color: var(--ink-faint);
-  }
 </style>
 
 <!-- ============================================================
      NAV
      ============================================================ -->
-<nav>
+<nav class="top-nav">
   <div class="wrap-wide row">
     <a class="brand" href="#top">DP</a>
     <div class="links">
@@ -377,6 +217,15 @@
       <a href="#contact">Contact</a>
     </div>
   </div>
+</nav>
+
+<!-- ============================================================
+     SIDE NAV — quick links to other pages
+     ============================================================ -->
+<nav class="side-nav" aria-label="Site sections">
+  <a href="#about">Bio</a>
+  <a href="blogs.html">Blogs</a>
+  <a href="finances.html">Finances</a>
 </nav>
 
 <!-- ============================================================

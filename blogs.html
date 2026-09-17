@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blogs — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head {
+    padding-block: 56px 32px;
+  }
+  .page-head h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    margin: 0 0 8px;
+  }
+  .page-head p {
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  /* -------------------------------------------------------------
+     BLOG POSTS
+     To add a new post: copy one <article class="post"> block and
+     paste it right after this comment (newest posts go on top),
+     then edit the title, date, and body text.
+     ------------------------------------------------------------- */
+  .post { padding-block: 36px; border-top: 1px solid var(--line); }
+  .post:first-of-type { border-top: none; padding-top: 0; }
+  .post .post-date {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  .post h2 {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+  .post p {
+    color: var(--ink-soft);
+    max-width: 66ch;
+    margin: 0 0 14px;
+  }
+  .post p:last-child { margin-bottom: 0; }
+</style>
+
+<nav class="top-nav">
+  <div class="wrap-wide row">
+    <a class="brand" href="index.html#top">DP</a>
+    <div class="links">
+      <a href="index.html#about">About</a>
+      <a href="index.html#impact">Impact</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<nav class="side-nav" aria-label="Site sections">
+  <a href="index.html#about">Bio</a>
+  <a href="blogs.html" class="active">Blogs</a>
+  <a href="finances.html">Finances</a>
+</nav>
+
+<header class="page-head wrap">
+  <h1>Blogs</h1>
+  <p>Notes on whatever I'm reading, building, or thinking about lately — engineering, leadership, or otherwise.</p>
+</header>
+
+<main class="wrap">
+  <!-- Newest posts go at the top. Copy this block to add another. -->
+  <article class="post">
+    <p class="post-date">September 17, 2026</p>
+    <h2>Starting this blog</h2>
+    <p>
+      This is the first post — mostly just a placeholder to confirm the page works. I'll use this space
+      for random topics: things I'm reading, side projects, or whatever's on my mind that doesn't fit
+      neatly into the rest of the site.
+    </p>
+  </article>
+  <article class="post">
+    <p class="post-date">September 17, 2026</p>
+    <h2>Starting Dummy Blog #2 </h2>
+    <p>
+      This is the second post — mostly just a placeholder to confirm the page works. I'll use this space
+      for random topics: things I'm reading, side projects, or whatever's on my mind that doesn't fit
+      neatly into the rest of the site.
+    </p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
