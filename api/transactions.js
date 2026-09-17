@@ -14,11 +14,11 @@ async function ensureTable(sql) {
 }
 
 export default async function handler(req, res) {
-  if (!process.env.DATABASE_URL) {
-    return res.status(500).json({ error: 'DATABASE_URL is not configured.' });
+  if (!process.env.DNP_DATABASE_URL) {
+    return res.status(500).json({ error: 'DNP_DATABASE_URL is not configured.' });
   }
 
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = neon(process.env.DNP_DATABASE_URL);
   await ensureTable(sql);
 
   if (req.method === 'GET') {
