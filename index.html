@@ -27,22 +27,22 @@
      ------------------------------------------------------------- */
   .avatar-placeholder {
     flex: none;
-    width: 116px;
-    height: 116px;
+    width: 232px;
+    height: 232px;
     border-radius: 50%;
     border: 1.5px dashed var(--ink-faint);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--serif);
-    font-size: 34px;
+    font-size: 68px;
     color: var(--ink-faint);
     background: var(--paper-raised);
   }
   .avatar-photo {
     flex: none;
-    width: 116px;
-    height: 116px;
+    width: 232px;
+    height: 232px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid var(--line);
@@ -234,9 +234,9 @@
 <header class="hero" id="top">
   <div class="wrap">
     <div class="hero-row reveal">
-      <!-- PHOTO PLACEHOLDER: see comment in the CSS above for how to swap this for a real photo -->
-      <!-- <div class="avatar-placeholder" aria-hidden="true">DP</div> -->
-      <img class="avatar-photo" src="img/dhavalpatel_yosemite.jpg" alt="Dhaval Patel">
+      <!-- If the photo fails to load, onerror hides it and reveals this initials placeholder -->
+      <div class="avatar-placeholder" id="avatar-fallback" aria-hidden="true" style="display:none;">DP</div>
+      <img class="avatar-photo" src="img/Me_Yosemite.jpeg" alt="Dhaval Patel" onerror="this.style.display='none'; document.getElementById('avatar-fallback').style.display='flex';">
       <div>
         <h1>Dhaval Patel</h1>
         <p class="role">Senior Engineering Manager — SaaS &amp; Enterprise Platforms</p>
