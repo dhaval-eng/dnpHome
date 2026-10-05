@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Posts — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head { padding-block: 56px 24px; }
+  .page-head h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    margin: 0 0 8px;
+  }
+  .back-link { font-family: var(--mono); font-size: 13px; }
+
+  .post-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding-block: 14px;
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .post-row:first-of-type { border-top: none; }
+  .post-row a { color: var(--ink); text-decoration: none; font-weight: 500; }
+  .post-row a:hover { color: var(--accent-ink); }
+  .post-row .post-date {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+</style>
+
+<nav class="top-nav">
+  <div class="wrap-wide row">
+    <a class="brand" href="index.html#top">DP</a>
+    <div class="links">
+      <a href="index.html#about">About</a>
+      <a href="index.html#impact">Impact</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<nav class="side-nav" aria-label="Site sections">
+  <a href="index.html#about">Bio</a>
+  <a href="blogs.html" class="active">Blogs</a>
+  <a href="finances.html">Finances</a>
+</nav>
+
+<header class="page-head wrap">
+  <h1>All Posts</h1>
+  <a class="back-link" href="blogs.html">← Back to Blogs</a>
+</header>
+
+<main class="wrap" id="post-list">
+  <p class="empty">Loading…</p>
+</main>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+  const list = document.getElementById('post-list');
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadPosts() {
+    const res = await fetch('/api/blog-posts');
+    if (!res.ok) {
+      list.innerHTML = '<p class="empty">Could not load posts.</p>';
+      return;
+    }
+    const posts = await res.json();
+
+    list.innerHTML = posts.length
+      ? posts
+          .map(
+            (p) => `
+      <div class="post-row">
+        <a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a>
+        <span class="post-date">${formatDate(p.created_at)}</span>
+      </div>`
+          )
+          .join('')
+      : '<p class="empty">No posts yet.</p>';
+  }
+
+  loadPosts();
+</script>
+</body>
+</html>

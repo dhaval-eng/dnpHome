@@ -45,7 +45,7 @@ function loginPage(showError) {
 }
 
 export const config = {
-  matcher: ['/blogs.html', '/finances.html', '/api/(.*)'],
+  matcher: ['/blogs.html', '/post.html', '/all-posts.html', '/finances.html', '/api/(.*)'],
 };
 
 export default async function middleware(request) {

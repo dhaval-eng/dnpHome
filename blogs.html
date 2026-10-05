@@ -11,30 +11,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .page-head {
-    padding-block: 56px 32px;
-  }
+  .page-head { padding-block: 56px 32px; }
   .page-head h1 {
     font-family: var(--serif);
     font-weight: 600;
     font-size: clamp(1.9rem, 4.5vw, 2.6rem);
     margin: 0 0 8px;
   }
-  .page-head p {
-    color: var(--ink-soft);
-    margin: 0;
-    max-width: 60ch;
-  }
+  .page-head p { color: var(--ink-soft); margin: 0; max-width: 60ch; }
 
-  /* -------------------------------------------------------------
-     BLOG POSTS
-     To add a new post: copy one <article class="post"> block and
-     paste it right after this comment (newest posts go on top),
-     then edit the title, date, and body text.
-     ------------------------------------------------------------- */
-  .post { padding-block: 36px; border-top: 1px solid var(--line); }
-  .post:first-of-type { border-top: none; padding-top: 0; }
-  .post .post-date {
+  .view-all { font-family: var(--mono); font-size: 13px; }
+
+  .post-card { padding-block: 28px; border-top: 1px solid var(--line); }
+  .post-card:first-of-type { border-top: none; padding-top: 0; }
+  .post-card .post-date {
     font-family: var(--mono);
     font-size: 12.5px;
     letter-spacing: 0.06em;
@@ -42,27 +32,46 @@
     color: var(--ink-faint);
     margin: 0 0 8px;
   }
-  .post h2 {
+  .post-card h2 {
     font-family: var(--serif);
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 600;
-    margin: 0 0 14px;
+    margin: 0 0 10px;
   }
-  .post p {
-    color: var(--ink-soft);
-    max-width: 66ch;
-    margin: 0 0 14px;
+  .post-card h2 a { color: var(--ink); text-decoration: none; }
+  .post-card h2 a:hover { color: var(--accent-ink); }
+  .post-card .summary { color: var(--ink-soft); max-width: 66ch; margin: 0; }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+
+  .new-post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 640px;
   }
-  .post p:last-child { margin-bottom: 0; }
-  .post ul {
-    color: var(--ink-soft);
-    max-width: 66ch;
-    margin: 0 0 14px;
-    padding-left: 22px;
+  .new-post-form label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
   }
-  .post ul:last-child { margin-bottom: 0; }
-  .post li { margin-bottom: 6px; }
-  .post li:last-child { margin-bottom: 0; }
+  .new-post-form input,
+  .new-post-form textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    box-sizing: border-box;
+  }
+  .new-post-form textarea { min-height: 140px; resize: vertical; }
+  .form-error { color: #c0392b; font-size: 13.5px; margin: 0; min-height: 1em; }
 </style>
 
 <nav class="top-nav">
@@ -88,67 +97,109 @@
   <p>Notes on whatever I'm reading, building, or thinking about lately — engineering, leadership, or otherwise.</p>
 </header>
 
-<main class="wrap">
-  <!-- Newest posts go at the top. Copy this block to add another. -->
-  <article class="post">
-    <p class="post-date">September 17, 2026</p>
-    <h2>Educational System 1</h2>
-    <p>Items that bother me about the educational system, and what I feel could be improved.</p>
-    <ul>
-      <li>Tests are not graded in a timely manner</li>
-      <li>Tests are often not returned to students in a timely manner</li>
-      <li>Not many/any classes around "real-world" and "real-life" skills</li>
-      <li>Kids are often learning through watching videos in school classrooms</li>
-    </ul>
-  </article>
-  <article class="post">
-    <p class="post-date">September 17, 2026</p>
-    <h2>Educational System</h2>
-    <p>Items that bother me about the educational system, and what I feel could be improved.</p>
-    <ul>
-      <li>Tests are not graded in a timely manner</li>
-      <li>Tests are often not returned to students in a timely manner</li>
-      <li>Not many/any classes around "real-world" and "real-life" skills</li>
-      <li>Kids are often learning through watching videos in school classrooms</li>
-    </ul>
-  </article>
-  <article class="post">
-    <p class="post-date">September 17, 2026</p>
-     <h2>Job Hunting Woes</h2>
-    <p>Improvements that can be made to the hiringprocess.</p>
-    <ul>
-      <li>Job posts for jobs that are not approved to hire "now".</li>
-      <li>Applications asking the same questions or questions that should be obvious</li>
-      <li>No response to several jobs</li>
-      <li>Lengthy applications</li>
-      <li>Cover letters</li>
-      <li>Power of networking</li>
-      <li>Recruiters reaching out and then ghosting you</li>
-      <li>Interview process needs to be more transparent on when decisions will be finalized</li>
-    </ul>
-  </article>
-  <article class="post">
-    <p class="post-date">September 17, 2026</p>
-     <h2>Politics</h2>
-    <p>I'm speechless.</p>
-    <ul>
-      <li>Where is the SEC to regulate trading by Whitehouse personnel with material information</li>
-      <li>Iran War -- what is the end game</li>
-      <li>What happened to releasing Epstein files?</li>
-      <li>Why are all Republicans too afraid to standup to DJT?</li>
-      <li>Why are all GOPs members kissing up to DJT?</li>
-      <li>Voter/election fraud in 2020?  Really?</li>
-      <li>ICE and national guards summoned to areas they didn't belong</li>
-      <li>DJT and family benefitting with deals worth billions</li>
-      <li>DJT not focused on real problems</li>
-    </ul>
-  </article>
-</main>
+<section class="wrap" style="padding-top: 0;">
+  <div style="display:flex; justify-content:space-between; align-items:baseline; gap: 16px; flex-wrap: wrap;">
+    <p class="eyebrow" style="margin-bottom: 0;">Latest posts</p>
+    <a class="view-all" href="all-posts.html">View all posts →</a>
+  </div>
+  <div id="post-list" style="margin-top: 18px;">
+    <p class="empty">Loading…</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="eyebrow">Write a new post</p>
+  <form class="new-post-form" id="new-post-form">
+    <div>
+      <label for="title">Title</label>
+      <input type="text" id="title" required>
+    </div>
+    <div>
+      <label for="content">Content</label>
+      <textarea id="content" required></textarea>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary">Publish</button>
+    </div>
+    <p class="form-error" id="form-error"></p>
+  </form>
+</section>
 
 <footer>
   <div class="wrap">Dhaval Patel · Central Jersey</div>
 </footer>
 
 <script defer src="/_vercel/insights/script.js"></script>
+<script>
+  const postList = document.getElementById('post-list');
+  const form = document.getElementById('new-post-form');
+  const titleInput = document.getElementById('title');
+  const contentInput = document.getElementById('content');
+  const errorEl = document.getElementById('form-error');
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function summarize(content) {
+    const trimmed = content.trim();
+    return trimmed.length > 100 ? trimmed.slice(0, 100).trim() + '…' : trimmed;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadPosts() {
+    const res = await fetch('/api/blog-posts');
+    if (!res.ok) {
+      postList.innerHTML = '<p class="empty">Could not load posts.</p>';
+      return;
+    }
+    const posts = await res.json();
+    const top5 = posts.slice(0, 5);
+
+    postList.innerHTML = top5.length
+      ? top5
+          .map(
+            (p) => `
+      <article class="post-card">
+        <p class="post-date">${formatDate(p.created_at)}</p>
+        <h2><a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a></h2>
+        <p class="summary">${escapeHtml(summarize(p.content))}</p>
+      </article>`
+          )
+          .join('')
+      : '<p class="empty">No posts yet — write the first one below.</p>';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    if (!titleInput.value.trim() || !contentInput.value.trim()) {
+      errorEl.textContent = 'Title and content are required.';
+      return;
+    }
+
+    const res = await fetch('/api/blog-posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: titleInput.value.trim(), content: contentInput.value.trim() }),
+    });
+
+    if (!res.ok) {
+      errorEl.textContent = 'Could not publish that post.';
+      return;
+    }
+
+    form.reset();
+    loadPosts();
+  });
+
+  loadPosts();
+</script>
 </body>
 </html>

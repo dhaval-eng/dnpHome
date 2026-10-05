@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head { padding-block: 56px 24px; }
+  .back-link { font-family: var(--mono); font-size: 13px; }
+
+  .post-meta {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+  .post-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+    margin: 0 0 24px;
+  }
+  .post-content {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    white-space: pre-wrap;
+    font-size: 16px;
+  }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+</style>
+
+<nav class="top-nav">
+  <div class="wrap-wide row">
+    <a class="brand" href="index.html#top">DP</a>
+    <div class="links">
+      <a href="index.html#about">About</a>
+      <a href="index.html#impact">Impact</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<nav class="side-nav" aria-label="Site sections">
+  <a href="index.html#about">Bio</a>
+  <a href="blogs.html" class="active">Blogs</a>
+  <a href="finances.html">Finances</a>
+</nav>
+
+<header class="page-head wrap">
+  <a class="back-link" href="blogs.html">← Back to Blogs</a>
+</header>
+
+<main class="wrap" id="post-container">
+  <p class="empty">Loading…</p>
+</main>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+  const container = document.getElementById('post-container');
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  async function loadPost() {
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) {
+      container.innerHTML = '<p class="empty">No post specified.</p>';
+      return;
+    }
+
+    const res = await fetch(`/api/blog-posts?id=${encodeURIComponent(id)}`);
+    if (!res.ok) {
+      container.innerHTML = '<p class="empty">That post could not be found.</p>';
+      return;
+    }
+
+    const post = await res.json();
+    document.title = `${post.title} — Dhaval Patel`;
+
+    const createdLabel = formatDate(post.created_at);
+    const editedLabel = formatDate(post.updated_at);
+    const metaLine = post.updated_at !== post.created_at
+      ? `Posted ${createdLabel} · Last edited ${editedLabel}`
+      : `Posted ${createdLabel}`;
+
+    container.innerHTML = '';
+
+    const meta = document.createElement('p');
+    meta.className = 'post-meta';
+    meta.textContent = metaLine;
+
+    const title = document.createElement('h1');
+    title.className = 'post-title';
+    title.textContent = post.title;
+
+    const content = document.createElement('div');
+    content.className = 'post-content';
+    content.textContent = post.content;
+
+    container.append(meta, title, content);
+  }
+
+  loadPost();
+</script>
+</body>
+</html>
