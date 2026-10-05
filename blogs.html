@@ -122,6 +122,7 @@
       <button type="submit" class="btn btn-primary">Publish</button>
     </div>
     <p class="form-error" id="form-error"></p>
+    <div id="publish-auth-gate"></div>
   </form>
 </section>
 
@@ -130,9 +131,11 @@
 </footer>
 
 <script defer src="/_vercel/insights/script.js"></script>
+<script src="auth.js"></script>
 <script>
   const postList = document.getElementById('post-list');
   const form = document.getElementById('new-post-form');
+  const attemptPublish = initAuthGate(document.getElementById('publish-auth-gate'));
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content');
   const errorEl = document.getElementById('form-error');
@@ -184,11 +187,11 @@
       return;
     }
 
-    const res = await fetch('/api/blog-posts', {
+    const res = await attemptPublish(() => fetch('/api/blog-posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: titleInput.value.trim(), content: contentInput.value.trim() }),
-    });
+    }));
 
     if (!res.ok) {
       errorEl.textContent = 'Could not publish that post.';

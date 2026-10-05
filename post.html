@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .page-head { padding-block: 56px 24px; }
+  .page-head { padding-block: 56px 24px; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
   .back-link { font-family: var(--mono); font-size: 13px; }
 
   .post-meta {
@@ -35,6 +35,26 @@
     font-size: 16px;
   }
   .empty { color: var(--ink-faint); font-size: 14px; }
+
+  .edit-form input,
+  .edit-form textarea {
+    display: block;
+    width: 100%;
+    max-width: 68ch;
+    padding: 10px;
+    margin-bottom: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  .edit-form input { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; }
+  .edit-form textarea { min-height: 260px; resize: vertical; }
+  .edit-actions { display: flex; gap: 10px; }
+  .form-error { color: #c0392b; font-size: 13.5px; margin: 10px 0 0; }
 </style>
 
 <nav class="top-nav">
@@ -57,6 +77,7 @@
 
 <header class="page-head wrap">
   <a class="back-link" href="blogs.html">← Back to Blogs</a>
+  <button type="button" class="btn btn-ghost" id="edit-btn" hidden>Edit</button>
 </header>
 
 <main class="wrap" id="post-container">
@@ -68,12 +89,96 @@
 </footer>
 
 <script defer src="/_vercel/insights/script.js"></script>
+<script src="auth.js"></script>
 <script>
   const container = document.getElementById('post-container');
+  const editBtn = document.getElementById('edit-btn');
+
+  let currentPost = null;
 
   function formatDate(iso) {
     return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
+
+  function metaLineFor(post) {
+    const createdLabel = formatDate(post.created_at);
+    const editedLabel = formatDate(post.updated_at);
+    return post.updated_at !== post.created_at
+      ? `Posted ${createdLabel} · Last edited ${editedLabel}`
+      : `Posted ${createdLabel}`;
+  }
+
+  function renderView(post) {
+    document.title = `${post.title} — Dhaval Patel`;
+    editBtn.hidden = false;
+
+    container.innerHTML = '';
+    const meta = document.createElement('p');
+    meta.className = 'post-meta';
+    meta.textContent = metaLineFor(post);
+
+    const title = document.createElement('h1');
+    title.className = 'post-title';
+    title.textContent = post.title;
+
+    const content = document.createElement('div');
+    content.className = 'post-content';
+    content.textContent = post.content;
+
+    container.append(meta, title, content);
+  }
+
+  function renderEdit(post) {
+    editBtn.hidden = true;
+    container.innerHTML = `
+      <form class="edit-form" id="edit-form">
+        <input type="text" id="edit-title" required>
+        <textarea id="edit-content" required></textarea>
+        <div class="edit-actions">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-ghost" id="cancel-edit">Cancel</button>
+        </div>
+        <p class="form-error" id="edit-error"></p>
+        <div id="edit-auth-gate"></div>
+      </form>
+    `;
+    document.getElementById('edit-title').value = post.title;
+    document.getElementById('edit-content').value = post.content;
+
+    const attemptSave = initAuthGate(document.getElementById('edit-auth-gate'));
+    const errorEl = document.getElementById('edit-error');
+
+    document.getElementById('cancel-edit').addEventListener('click', () => renderView(post));
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.textContent = '';
+
+      const title = document.getElementById('edit-title').value.trim();
+      const content = document.getElementById('edit-content').value.trim();
+
+      if (!title || !content) {
+        errorEl.textContent = 'Title and content are required.';
+        return;
+      }
+
+      const res = await attemptSave(() => fetch(`/api/blog-posts?id=${encodeURIComponent(post.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content }),
+      }));
+
+      if (!res.ok) {
+        errorEl.textContent = 'Could not save that post.';
+        return;
+      }
+
+      currentPost = await res.json();
+      renderView(currentPost);
+    });
+  }
+
+  editBtn.addEventListener('click', () => renderEdit(currentPost));
 
   async function loadPost() {
     const id = new URLSearchParams(location.search).get('id');
@@ -88,30 +193,8 @@
       return;
     }
 
-    const post = await res.json();
-    document.title = `${post.title} — Dhaval Patel`;
-
-    const createdLabel = formatDate(post.created_at);
-    const editedLabel = formatDate(post.updated_at);
-    const metaLine = post.updated_at !== post.created_at
-      ? `Posted ${createdLabel} · Last edited ${editedLabel}`
-      : `Posted ${createdLabel}`;
-
-    container.innerHTML = '';
-
-    const meta = document.createElement('p');
-    meta.className = 'post-meta';
-    meta.textContent = metaLine;
-
-    const title = document.createElement('h1');
-    title.className = 'post-title';
-    title.textContent = post.title;
-
-    const content = document.createElement('div');
-    content.className = 'post-content';
-    content.textContent = post.content;
-
-    container.append(meta, title, content);
+    currentPost = await res.json();
+    renderView(currentPost);
   }
 
   loadPost();

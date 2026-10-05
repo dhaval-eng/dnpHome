@@ -120,6 +120,30 @@ export default async function handler(req, res) {
     return res.status(201).json(rows[0]);
   }
 
-  res.setHeader('Allow', 'GET, POST');
+  if (req.method === 'PUT') {
+    const { id } = req.query;
+    const { title, content } = req.body || {};
+
+    if (!id) {
+      return res.status(400).json({ error: 'id is required' });
+    }
+    if (!title || !content) {
+      return res.status(400).json({ error: 'title and content are required' });
+    }
+
+    const rows = await sql`
+      UPDATE blog_posts
+      SET title = ${title}, content = ${content}, updated_at = now()
+      WHERE id = ${id}
+      RETURNING id, title, content, created_at, updated_at
+    `;
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    return res.status(200).json(rows[0]);
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT');
   return res.status(405).end('Method Not Allowed');
 }
