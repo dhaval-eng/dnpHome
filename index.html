@@ -205,28 +205,10 @@
 </style>
 
 <!-- ============================================================
-     NAV
+     NAV — injected by nav.js (shared across all pages)
      ============================================================ -->
-<nav class="top-nav">
-  <div class="wrap-wide row">
-    <a class="brand" href="#top">DP</a>
-    <div class="links">
-      <a href="#about">About</a>
-      <a href="#impact">Impact</a>
-      <a href="#experience">Experience</a>
-      <a href="#contact">Contact</a>
-    </div>
-  </div>
-</nav>
-
-<!-- ============================================================
-     SIDE NAV — quick links to other pages
-     ============================================================ -->
-<nav class="side-nav" aria-label="Site sections">
-  <a href="#about">Bio</a>
-  <a href="blogs.html">Blogs</a>
-  <a href="finances.html">Finances</a>
-</nav>
+<div id="site-nav"></div>
+<script src="nav.js"></script>
 
 <!-- ============================================================
      HERO — name, title, one-line bio

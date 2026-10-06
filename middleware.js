@@ -101,8 +101,10 @@ export default async function middleware(request) {
     });
   }
 
-  // Reading blog posts is public — no auth required.
-  if (pathname === '/api/blog-posts' && request.method === 'GET') {
+  // Reading blog posts, quotes, and dad jokes is public — no auth required.
+  // Adding new ones (POST) still requires the password, handled below.
+  const PUBLIC_READ_PATHS = ['/api/blog-posts', '/api/quotes', '/api/dad-jokes'];
+  if (PUBLIC_READ_PATHS.includes(pathname) && request.method === 'GET') {
     return next();
   }
 

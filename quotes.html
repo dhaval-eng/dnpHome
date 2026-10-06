@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotes — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head { padding-block: 56px 32px; }
+  .page-head h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    margin: 0 0 8px;
+  }
+  .page-head p { color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+  .quote-card { padding-block: 28px; border-top: 1px solid var(--line); }
+  .quote-card:first-of-type { border-top: none; padding-top: 0; }
+  .quote-card blockquote {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-style: italic;
+    color: var(--ink);
+    margin: 0 0 10px;
+  }
+  .quote-card .quote-author {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+
+  .new-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 560px;
+  }
+  .new-form label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .new-form input,
+  .new-form textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    box-sizing: border-box;
+  }
+  .new-form textarea { min-height: 90px; resize: vertical; }
+  .form-error { color: #c0392b; font-size: 13.5px; margin: 0; min-height: 1em; }
+</style>
+
+<div id="site-nav"></div>
+<script src="nav.js" data-active="quotes.html"></script>
+
+<header class="page-head wrap">
+  <h1>Quotes</h1>
+  <p>Lines worth keeping around.</p>
+</header>
+
+<section class="wrap" style="padding-top: 0;">
+  <div id="quote-list">
+    <p class="empty">Loading…</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="eyebrow">Add a quote</p>
+  <form class="new-form" id="new-quote-form">
+    <div>
+      <label for="quote-text">Quote</label>
+      <textarea id="quote-text" required></textarea>
+    </div>
+    <div>
+      <label for="quote-author">Author (optional)</label>
+      <input type="text" id="quote-author">
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary">Add quote</button>
+    </div>
+    <p class="form-error" id="form-error"></p>
+    <div id="quote-auth-gate"></div>
+  </form>
+</section>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="auth.js"></script>
+<script>
+  const quoteList = document.getElementById('quote-list');
+  const form = document.getElementById('new-quote-form');
+  const textInput = document.getElementById('quote-text');
+  const authorInput = document.getElementById('quote-author');
+  const errorEl = document.getElementById('form-error');
+  const attemptAdd = initAuthGate(document.getElementById('quote-auth-gate'));
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadQuotes() {
+    const res = await fetch('/api/quotes');
+    if (!res.ok) {
+      quoteList.innerHTML = '<p class="empty">Could not load quotes.</p>';
+      return;
+    }
+    const quotes = await res.json();
+    quoteList.innerHTML = quotes.length
+      ? quotes
+          .map(
+            (q) => `
+      <div class="quote-card">
+        <blockquote>"${escapeHtml(q.text)}"</blockquote>
+        ${q.author ? `<p class="quote-author">— ${escapeHtml(q.author)}</p>` : ''}
+      </div>`
+          )
+          .join('')
+      : '<p class="empty">No quotes yet — add the first one below.</p>';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    if (!textInput.value.trim()) {
+      errorEl.textContent = 'Quote text is required.';
+      return;
+    }
+
+    const res = await attemptAdd(() => fetch('/api/quotes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: textInput.value.trim(), author: authorInput.value.trim() }),
+    }));
+
+    if (!res.ok) {
+      errorEl.textContent = 'Could not add that quote.';
+      return;
+    }
+
+    form.reset();
+    loadQuotes();
+  });
+
+  loadQuotes();
+</script>
+</body>
+</html>

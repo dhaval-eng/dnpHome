@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dad Jokes — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head { padding-block: 56px 32px; }
+  .page-head h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    margin: 0 0 8px;
+  }
+  .page-head p { color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+  .joke-card { padding-block: 20px; border-top: 1px solid var(--line); }
+  .joke-card:first-of-type { border-top: none; padding-top: 0; }
+  .joke-card p { margin: 0; color: var(--ink); font-size: 16px; white-space: pre-wrap; }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+
+  .new-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 560px;
+  }
+  .new-form label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .new-form textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    box-sizing: border-box;
+    min-height: 90px;
+    resize: vertical;
+  }
+  .form-error { color: #c0392b; font-size: 13.5px; margin: 0; min-height: 1em; }
+</style>
+
+<div id="site-nav"></div>
+<script src="nav.js" data-active="dad-jokes.html"></script>
+
+<header class="page-head wrap">
+  <h1>Dad Jokes</h1>
+  <p>You're welcome.</p>
+</header>
+
+<section class="wrap" style="padding-top: 0;">
+  <div id="joke-list">
+    <p class="empty">Loading…</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <p class="eyebrow">Add a joke</p>
+  <form class="new-form" id="new-joke-form">
+    <div>
+      <label for="joke-text">Joke</label>
+      <textarea id="joke-text" required></textarea>
+    </div>
+    <div>
+      <button type="submit" class="btn btn-primary">Add joke</button>
+    </div>
+    <p class="form-error" id="form-error"></p>
+    <div id="joke-auth-gate"></div>
+  </form>
+</section>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="auth.js"></script>
+<script>
+  const jokeList = document.getElementById('joke-list');
+  const form = document.getElementById('new-joke-form');
+  const textInput = document.getElementById('joke-text');
+  const errorEl = document.getElementById('form-error');
+  const attemptAdd = initAuthGate(document.getElementById('joke-auth-gate'));
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadJokes() {
+    const res = await fetch('/api/dad-jokes');
+    if (!res.ok) {
+      jokeList.innerHTML = '<p class="empty">Could not load jokes.</p>';
+      return;
+    }
+    const jokes = await res.json();
+    jokeList.innerHTML = jokes.length
+      ? jokes.map((j) => `<div class="joke-card"><p>${escapeHtml(j.text)}</p></div>`).join('')
+      : '<p class="empty">No jokes yet — add the first one below.</p>';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    if (!textInput.value.trim()) {
+      errorEl.textContent = 'Joke text is required.';
+      return;
+    }
+
+    const res = await attemptAdd(() => fetch('/api/dad-jokes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: textInput.value.trim() }),
+    }));
+
+    if (!res.ok) {
+      errorEl.textContent = 'Could not add that joke.';
+      return;
+    }
+
+    form.reset();
+    loadJokes();
+  });
+
+  loadJokes();
+</script>
+</body>
+</html>
