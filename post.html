@@ -36,6 +36,32 @@
   }
   .empty { color: var(--ink-faint); font-size: 14px; }
 
+  .comments-section { padding-top: 0; }
+  .comment { padding-block: 16px; border-top: 1px solid var(--line); }
+  .comment:first-of-type { border-top: none; padding-top: 0; }
+  .comment-meta { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); margin: 0 0 6px; }
+  .comment-meta strong { color: var(--ink); font-family: var(--sans); font-weight: 600; }
+  .comment-message { color: var(--ink-soft); white-space: pre-wrap; margin: 0; max-width: 66ch; }
+
+  .comment-form { margin-top: 24px; max-width: 520px; }
+  .comment-form input,
+  .comment-form textarea {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    box-sizing: border-box;
+  }
+  .comment-form textarea { min-height: 90px; resize: vertical; }
+  .comment-form-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .char-count { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+
   .edit-form input,
   .edit-form textarea {
     display: block;
@@ -83,6 +109,22 @@
 <main class="wrap" id="post-container">
   <p class="empty">Loading…</p>
 </main>
+
+<section class="wrap comments-section">
+  <p class="eyebrow">Comments</p>
+  <div id="comments-list">
+    <p class="empty">Loading…</p>
+  </div>
+  <form class="comment-form" id="comment-form">
+    <input type="text" id="comment-name" placeholder="Your name" maxlength="100" required>
+    <textarea id="comment-message" placeholder="Add a comment…" maxlength="500" required></textarea>
+    <div class="comment-form-footer">
+      <span class="char-count" id="char-count">0/500</span>
+      <button type="submit" class="btn btn-primary">Post comment</button>
+    </div>
+    <p class="form-error" id="comment-error"></p>
+  </form>
+</section>
 
 <footer>
   <div class="wrap">Dhaval Patel · Central Jersey</div>
@@ -195,7 +237,73 @@
 
     currentPost = await res.json();
     renderView(currentPost);
+    loadComments(currentPost.id);
   }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  const commentsList = document.getElementById('comments-list');
+  const commentForm = document.getElementById('comment-form');
+  const commentNameInput = document.getElementById('comment-name');
+  const commentMessageInput = document.getElementById('comment-message');
+  const commentError = document.getElementById('comment-error');
+  const charCount = document.getElementById('char-count');
+
+  commentMessageInput.addEventListener('input', () => {
+    charCount.textContent = `${commentMessageInput.value.length}/500`;
+  });
+
+  async function loadComments(postId) {
+    const res = await fetch(`/api/comments?post_id=${encodeURIComponent(postId)}`);
+    if (!res.ok) {
+      commentsList.innerHTML = '<p class="empty">Could not load comments.</p>';
+      return;
+    }
+    const comments = await res.json();
+    commentsList.innerHTML = comments.length
+      ? comments
+          .map(
+            (c) => `
+      <div class="comment">
+        <p class="comment-meta">${formatDate(c.created_at)} · <strong>${escapeHtml(c.name)}</strong></p>
+        <p class="comment-message">${escapeHtml(c.message)}</p>
+      </div>`
+          )
+          .join('')
+      : '<p class="empty">No comments yet — be the first.</p>';
+  }
+
+  commentForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    commentError.textContent = '';
+
+    const name = commentNameInput.value.trim();
+    const message = commentMessageInput.value.trim();
+
+    if (!name || !message) {
+      commentError.textContent = 'Name and comment are required.';
+      return;
+    }
+
+    const res = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_id: currentPost.id, name, message }),
+    });
+
+    if (!res.ok) {
+      commentError.textContent = 'Could not post that comment.';
+      return;
+    }
+
+    commentForm.reset();
+    charCount.textContent = '0/500';
+    loadComments(currentPost.id);
+  });
 
   loadPost();
 </script>

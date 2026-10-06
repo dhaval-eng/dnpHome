@@ -106,6 +106,11 @@ export default async function middleware(request) {
     return next();
   }
 
+  // Comments are fully public — anyone can read or post them, no password.
+  if (pathname === '/api/comments') {
+    return next();
+  }
+
   if (isAuthed) {
     return next();
   }
