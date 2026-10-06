@@ -100,7 +100,7 @@ export default async function handler(req, res) {
     const rows = await sql`
       SELECT id, title, content, created_at, updated_at
       FROM blog_posts
-      ORDER BY created_at DESC, id DESC
+      ORDER BY updated_at DESC, id DESC
     `;
     return res.status(200).json(rows);
   }

@@ -100,7 +100,7 @@
             (p) => `
       <div class="post-row">
         <a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a>
-        <span class="post-date">${formatDate(p.created_at)}</span>
+        <span class="post-date">${formatDate(p.updated_at)}</span>
       </div>`
           )
           .join('')

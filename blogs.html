@@ -169,7 +169,7 @@
           .map(
             (p) => `
       <article class="post-card">
-        <p class="post-date">${formatDate(p.created_at)}</p>
+        <p class="post-date">${formatDate(p.updated_at)}</p>
         <h2><a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a></h2>
         <p class="summary">${escapeHtml(summarize(p.content))}</p>
       </article>`
