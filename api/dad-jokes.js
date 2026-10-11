@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import { getSql } from '../lib/db.js';
 
 async function ensureTable(sql) {
   await sql`
@@ -10,12 +10,14 @@ async function ensureTable(sql) {
   `;
 }
 
-export default async function handler(req, res) {
-  if (!process.env.DNP_DATABASE_URL) {
-    return res.status(500).json({ error: 'DNP_DATABASE_URL is not configured.' });
+export default async function handler(req, res, sql) {
+  if (!sql) {
+    try {
+      sql = getSql();
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
-
-  const sql = neon(process.env.DNP_DATABASE_URL);
   await ensureTable(sql);
 
   if (req.method === 'GET') {
