@@ -20,7 +20,7 @@
   const topNavHtml = `
     <nav class="top-nav">
       <div class="wrap-wide row">
-        <a class="brand" href="${homeHref('#top')}">DP</a>
+        <a class="brand" href="${homeHref('#top')}">Home</a>
         <div class="links">
           <a href="${homeHref('#about')}">About</a>
           <a href="${homeHref('#impact')}">Impact</a>
