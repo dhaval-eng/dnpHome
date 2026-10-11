@@ -32,6 +32,7 @@
   .post-row:first-of-type { border-top: none; }
   .post-row a { color: var(--ink); text-decoration: none; font-weight: 500; }
   .post-row a:hover { color: var(--accent-ink); }
+  .post-row .lock { color: var(--ink-faint); font-size: 13px; margin-left: 6px; }
   .post-row .post-date {
     font-family: var(--mono);
     font-size: 12.5px;
@@ -84,7 +85,7 @@
           .map(
             (p) => `
       <div class="post-row">
-        <a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a>
+        <span><a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a>${p.restricted === 'Y' ? '<span class="lock">🔒</span>' : ''}</span>
         <span class="post-date">${formatDate(p.updated_at)}</span>
       </div>`
           )

@@ -95,7 +95,9 @@
   <p class="empty">Loading…</p>
 </main>
 
-<section class="wrap comments-section">
+<div class="wrap" id="view-auth-gate"></div>
+
+<section class="wrap comments-section" id="comments-section" hidden>
   <p class="eyebrow">Comments</p>
   <div id="comments-list">
     <p class="empty">Loading…</p>
@@ -120,6 +122,7 @@
 <script>
   const container = document.getElementById('post-container');
   const editBtn = document.getElementById('edit-btn');
+  const attemptView = initAuthGate(document.getElementById('view-auth-gate'));
 
   let currentPost = null;
 
@@ -161,6 +164,10 @@
       <form class="edit-form" id="edit-form">
         <input type="text" id="edit-title" required>
         <textarea id="edit-content" required></textarea>
+        <div class="checkbox-row">
+          <input type="checkbox" id="edit-restricted">
+          <label for="edit-restricted">Restricted (requires password to read)</label>
+        </div>
         <div class="edit-actions">
           <button type="submit" class="btn btn-primary">Save</button>
           <button type="button" class="btn btn-ghost" id="cancel-edit">Cancel</button>
@@ -171,6 +178,7 @@
     `;
     document.getElementById('edit-title').value = post.title;
     document.getElementById('edit-content').value = post.content;
+    document.getElementById('edit-restricted').checked = post.restricted === 'Y';
 
     const attemptSave = initAuthGate(document.getElementById('edit-auth-gate'));
     const errorEl = document.getElementById('edit-error');
@@ -183,6 +191,7 @@
 
       const title = document.getElementById('edit-title').value.trim();
       const content = document.getElementById('edit-content').value.trim();
+      const restricted = document.getElementById('edit-restricted').checked ? 'Y' : 'N';
 
       if (!title || !content) {
         errorEl.textContent = 'Title and content are required.';
@@ -192,7 +201,7 @@
       const res = await attemptSave(() => fetch(`/api/blog-posts?id=${encodeURIComponent(post.id)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, restricted }),
       }));
 
       if (!res.ok) {
@@ -214,7 +223,8 @@
       return;
     }
 
-    const res = await fetch(`/api/blog-posts?id=${encodeURIComponent(id)}`);
+    container.innerHTML = '';
+    const res = await attemptView(() => fetch(`/api/blog-posts?id=${encodeURIComponent(id)}`));
     if (!res.ok) {
       container.innerHTML = '<p class="empty">That post could not be found.</p>';
       return;
@@ -222,6 +232,7 @@
 
     currentPost = await res.json();
     renderView(currentPost);
+    document.getElementById('comments-section').hidden = false;
     loadComments(currentPost.id);
   }
 
@@ -265,6 +276,11 @@
   commentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     commentError.textContent = '';
+
+    if (!currentPost) {
+      commentError.textContent = 'Post not loaded yet.';
+      return;
+    }
 
     const name = commentNameInput.value.trim();
     const message = commentMessageInput.value.trim();

@@ -41,6 +41,12 @@
   .post-card h2 a { color: var(--ink); text-decoration: none; }
   .post-card h2 a:hover { color: var(--accent-ink); }
   .post-card .summary { color: var(--ink-soft); max-width: 66ch; margin: 0; }
+  .lock-badge {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin: 0;
+  }
   .empty { color: var(--ink-faint); font-size: 14px; }
 
   .new-post-form {
@@ -103,6 +109,10 @@
       <label for="content">Content</label>
       <textarea id="content" required></textarea>
     </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="restricted">
+      <label for="restricted">Restricted (requires password to read)</label>
+    </div>
     <div>
       <button type="submit" class="btn btn-primary">Publish</button>
     </div>
@@ -123,6 +133,7 @@
   const attemptPublish = initAuthGate(document.getElementById('publish-auth-gate'));
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content');
+  const restrictedInput = document.getElementById('restricted');
   const errorEl = document.getElementById('form-error');
 
   function formatDate(iso) {
@@ -156,7 +167,11 @@
       <article class="post-card">
         <p class="post-date">${formatDate(p.updated_at)}</p>
         <h2><a href="post.html?id=${p.id}">${escapeHtml(p.title)}</a></h2>
-        <p class="summary">${escapeHtml(summarize(p.content))}</p>
+        ${
+          p.restricted === 'Y'
+            ? '<p class="lock-badge">🔒 Restricted — password required to read</p>'
+            : `<p class="summary">${escapeHtml(summarize(p.content))}</p>`
+        }
       </article>`
           )
           .join('')
@@ -175,7 +190,11 @@
     const res = await attemptPublish(() => fetch('/api/blog-posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: titleInput.value.trim(), content: contentInput.value.trim() }),
+      body: JSON.stringify({
+        title: titleInput.value.trim(),
+        content: contentInput.value.trim(),
+        restricted: restrictedInput.checked ? 'Y' : 'N',
+      }),
     }));
 
     if (!res.ok) {

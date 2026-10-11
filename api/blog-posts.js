@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { isAuthed } from '../lib/session.js';
 
 const SEED_POSTS = [
   {
@@ -52,6 +53,12 @@ const SEED_POSTS = [
   },
 ];
 
+const VALID_RESTRICTED = ['Y', 'N'];
+
+function normalizeRestricted(value) {
+  return VALID_RESTRICTED.includes(value) ? value : 'N';
+}
+
 async function ensureTable(sql) {
   await sql`
     CREATE TABLE IF NOT EXISTS blog_posts (
@@ -62,6 +69,7 @@ async function ensureTable(sql) {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
+  await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS restricted TEXT NOT NULL DEFAULT 'N'`;
 
   const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM blog_posts`;
   if (count === 0) {
@@ -84,45 +92,58 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const { id } = req.query;
+    const authed = await isAuthed(req.headers.cookie);
 
     if (id) {
       const rows = await sql`
-        SELECT id, title, content, created_at, updated_at
+        SELECT id, title, content, created_at, updated_at, restricted
         FROM blog_posts
         WHERE id = ${id}
       `;
       if (rows.length === 0) {
         return res.status(404).json({ error: 'Post not found' });
       }
-      return res.status(200).json(rows[0]);
+
+      const post = rows[0];
+      if (post.restricted === 'Y' && !authed) {
+        return res.status(401).json({ error: 'This post is restricted', restricted: true });
+      }
+      return res.status(200).json(post);
     }
 
     const rows = await sql`
-      SELECT id, title, content, created_at, updated_at
+      SELECT id, title, content, created_at, updated_at, restricted
       FROM blog_posts
       ORDER BY updated_at DESC, id DESC
     `;
-    return res.status(200).json(rows);
+
+    // Redact content for restricted posts unless the caller is authenticated,
+    // so the public list can't be used to read restricted content via its summary.
+    const sanitized = authed
+      ? rows
+      : rows.map((row) => (row.restricted === 'Y' ? { ...row, content: null } : row));
+
+    return res.status(200).json(sanitized);
   }
 
   if (req.method === 'POST') {
-    const { title, content } = req.body || {};
+    const { title, content, restricted } = req.body || {};
 
     if (!title || !content) {
       return res.status(400).json({ error: 'title and content are required' });
     }
 
     const rows = await sql`
-      INSERT INTO blog_posts (title, content)
-      VALUES (${title}, ${content})
-      RETURNING id, title, content, created_at, updated_at
+      INSERT INTO blog_posts (title, content, restricted)
+      VALUES (${title}, ${content}, ${normalizeRestricted(restricted)})
+      RETURNING id, title, content, created_at, updated_at, restricted
     `;
     return res.status(201).json(rows[0]);
   }
 
   if (req.method === 'PUT') {
     const { id } = req.query;
-    const { title, content } = req.body || {};
+    const { title, content, restricted } = req.body || {};
 
     if (!id) {
       return res.status(400).json({ error: 'id is required' });
@@ -133,9 +154,9 @@ export default async function handler(req, res) {
 
     const rows = await sql`
       UPDATE blog_posts
-      SET title = ${title}, content = ${content}, updated_at = now()
+      SET title = ${title}, content = ${content}, restricted = ${normalizeRestricted(restricted)}, updated_at = now()
       WHERE id = ${id}
-      RETURNING id, title, content, created_at, updated_at
+      RETURNING id, title, content, created_at, updated_at, restricted
     `;
 
     if (rows.length === 0) {
