@@ -238,7 +238,12 @@
       listEl.innerHTML = '<p class="empty">Could not load workouts.</p>';
       return;
     }
-    allRecords = await res.json();
+    const records = await res.json();
+    // Postgres DATE values can come back as a full ISO timestamp
+    // (e.g. "2026-11-02T00:00:00.000Z") rather than a bare "YYYY-MM-DD".
+    // Normalize once here so filtering, display, and the edit form's
+    // <input type="date"> prefill all see a consistent plain date string.
+    allRecords = records.map((r) => ({ ...r, date: String(r.date).slice(0, 10) }));
     renderWeek();
   }
 
