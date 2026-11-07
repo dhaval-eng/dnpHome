@@ -244,7 +244,10 @@
       list.innerHTML = '<p class="empty">Could not load transactions.</p>';
       return;
     }
-    render(await res.json());
+    const transactions = await res.json();
+    // Postgres DATE values can come back as a full ISO timestamp
+    // (e.g. "2026-11-02T00:00:00.000Z") rather than a bare "YYYY-MM-DD".
+    render(transactions.map((t) => ({ ...t, date: String(t.date).slice(0, 10) })));
   }
 
   form.addEventListener('submit', async (e) => {
