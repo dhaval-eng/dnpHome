@@ -50,9 +50,9 @@ function loginPage(showError) {
 
 export const config = {
   // blogs.html / post.html / all-posts.html are intentionally NOT listed here —
-  // viewing posts is public. Only finances.html (whole page) and the write
-  // methods on /api/* require the password.
-  matcher: ['/finances.html', '/api/(.*)'],
+  // viewing posts is public. finances.html and health.html (whole pages) are
+  // fully private, and write methods on /api/* generally require the password.
+  matcher: ['/finances.html', '/health.html', '/api/(.*)'],
 };
 
 export default async function middleware(request) {

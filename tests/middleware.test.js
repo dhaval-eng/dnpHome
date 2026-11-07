@@ -94,6 +94,22 @@ test('GET /api/transactions with no cookie is rejected as a JSON 401 (finances s
   assert.match(res.headers.get('content-type') || '', /application\/json/);
 });
 
+test('GET /api/health-log with no cookie is rejected as a JSON 401 (health stays fully private)', async () => {
+  setPassword();
+  const res = await middleware(new Request('https://example.com/api/health-log'));
+  assert.equal(res.status, 401);
+  assert.match(res.headers.get('content-type') || '', /application\/json/);
+});
+
+test('GET /health.html with no cookie shows the HTML login page', async () => {
+  setPassword();
+  const res = await middleware(new Request('https://example.com/health.html'));
+  assert.equal(res.status, 401);
+  assert.match(res.headers.get('content-type') || '', /text\/html/);
+  const body = await res.text();
+  assert.match(body, /This site is private/);
+});
+
 test('GET /finances.html with no cookie shows the HTML login page', async () => {
   setPassword();
   const res = await middleware(new Request('https://example.com/finances.html'));

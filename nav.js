@@ -15,6 +15,7 @@
     { href: 'quotes.html', label: 'Quotes' },
     { href: 'dad-jokes.html', label: 'Dad Jokes' },
     { href: 'finances.html', label: 'Finances' },
+    { href: 'health.html', label: 'Health' },
   ];
 
   const topNavHtml = `

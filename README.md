@@ -1,8 +1,8 @@
 # dnpHome
 
 Dhaval Patel's personal site — a bio page plus a small set of side
-features (a blog, quotes, dad jokes, and a private expense tracker),
-deployed on Vercel.
+features (a blog, quotes, dad jokes, a private expense tracker, and a
+private workout log), deployed on Vercel.
 
 ## Pages
 
@@ -13,6 +13,7 @@ deployed on Vercel.
 | Quotes | `quotes.html` | Public to read; adding a quote requires the password. |
 | Dad Jokes | `dad-jokes.html` | Public to read; adding a joke requires the password. |
 | Finances | `finances.html` | Entirely behind the password — a personal expense tracker. |
+| Health | `health.html` | Entirely behind the password — a workout log, viewed one Monday–Sunday week at a time with Prev/Next navigation; add, edit, and delete all require the password. |
 
 There is one site password, set once as an environment variable and checked
 via a shared cookie session — see **Environment variables** below.
@@ -28,8 +29,9 @@ via a shared cookie session — see **Environment variables** below.
   gated pages/routes, using a hashed session cookie (the real password
   never reaches the browser).
 - **Vercel Serverless Functions** (`api/*.js`, Node runtime) back the
-  dynamic features — blog posts, comments, quotes, dad jokes, and
-  finances — each with its own Postgres table, auto-created on first use.
+  dynamic features — blog posts, comments, quotes, dad jokes, finances,
+  and the health log — each with its own Postgres table, auto-created on
+  first use.
 - **Neon Postgres**, provisioned via Vercel's Storage/Marketplace
   integration, queried through `@neondatabase/serverless`.
 - **Vercel Analytics**, loaded via a plain `<script>` tag (this isn't a
@@ -40,7 +42,7 @@ via a shared cookie session — see **Environment variables** below.
 ```
 dnpHome/
 ├── index.html, blogs.html, post.html, all-posts.html,
-│   quotes.html, dad-jokes.html, finances.html   # pages
+│   quotes.html, dad-jokes.html, finances.html, health.html   # pages
 ├── styles.css           # shared design tokens, nav, footer, buttons
 ├── nav.js                # shared top-nav/side-nav, injected per page
 ├── auth.js                # client-side inline password-prompt helper
@@ -50,10 +52,12 @@ dnpHome/
 │   ├── comments.js
 │   ├── quotes.js
 │   ├── dad-jokes.js
-│   └── transactions.js
+│   ├── transactions.js
+│   └── health-log.js
 ├── lib/                      # shared server-side helpers
 │   ├── db.js                   # Postgres connection helper
 │   └── session.js               # cookie/session check (used outside middleware)
+├── tests/                       # node --test suite (see Tests below)
 └── img/                         # photos
 ```
 
@@ -62,8 +66,9 @@ dnpHome/
 Copy `.env.example` for the list. Set real values in the Vercel dashboard
 under **Project Settings → Environment Variables** — never commit them.
 
-- `SITE_PASSWORD` — the one password that gates Finances, publishing/editing
-  on Blogs/Quotes/Dad Jokes, and any post marked restricted.
+- `SITE_PASSWORD` — the one password that gates Finances, Health,
+  publishing/editing on Blogs/Quotes/Dad Jokes, and any post marked
+  restricted.
 - `DNP_DATABASE_URL` — the Neon Postgres connection string (provisioned via
   Vercel's Storage tab; named with a `DNP_` prefix because it was renamed
   after connecting the integration).
@@ -99,6 +104,9 @@ framework dependency. Coverage so far:
   post while unauthenticated, defaulting/normalizing the `restricted`
   field), using an in-memory fake `sql` client (`tests/helpers.js`) instead
   of a real database.
+- `tests/health-log.test.js` — validation (required fields, rejecting a
+  non-positive duration) and CRUD behavior in `api/health-log.js`, using
+  the same fake-`sql` approach.
 
 Every `api/*.js` handler accepts an optional third `sql` argument
 (`handler(req, res, sql)`), defaulting to a real Neon connection only when
