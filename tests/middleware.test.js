@@ -101,6 +101,35 @@ test('GET /api/health-log with no cookie is rejected as a JSON 401 (health stays
   assert.match(res.headers.get('content-type') || '', /application\/json/);
 });
 
+test('POST /api/track-visit with no cookie is public (visit logging works for everyone)', async () => {
+  setPassword();
+  const res = await middleware(
+    new Request('https://example.com/api/track-visit', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ path: '/index.html', referrer: '' }),
+    })
+  );
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('x-middleware-next'), '1');
+});
+
+test('GET /api/track-visit with no cookie is rejected as a JSON 401 (the visit log stays private)', async () => {
+  setPassword();
+  const res = await middleware(new Request('https://example.com/api/track-visit'));
+  assert.equal(res.status, 401);
+  assert.match(res.headers.get('content-type') || '', /application\/json/);
+});
+
+test('GET /analytics.html with no cookie shows the HTML login page', async () => {
+  setPassword();
+  const res = await middleware(new Request('https://example.com/analytics.html'));
+  assert.equal(res.status, 401);
+  assert.match(res.headers.get('content-type') || '', /text\/html/);
+  const body = await res.text();
+  assert.match(body, /This site is private/);
+});
+
 test('GET /health.html with no cookie shows the HTML login page', async () => {
   setPassword();
   const res = await middleware(new Request('https://example.com/health.html'));

@@ -39,4 +39,12 @@
     </nav>`;
 
   document.getElementById('site-nav').outerHTML = topNavHtml + sideNavHtml;
+
+  // Fire-and-forget visit beacon for analytics.html. Failures (offline,
+  // blocked request) are silently ignored — this must never affect the page.
+  fetch('/api/track-visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: location.pathname, referrer: document.referrer }),
+  }).catch(() => {});
 })();

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — Dhaval Patel</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .page-head { padding-block: 56px 24px; }
+  .page-head h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    margin: 0 0 8px;
+  }
+  .page-head p { color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+  .visits-wrap { overflow-x: auto; }
+  table.visits {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  table.visits th,
+  table.visits td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.visits th {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+  }
+  table.visits td { color: var(--ink-soft); }
+  .visit-time { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); }
+  .visit-you {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .visit-you.yes { background: var(--accent-soft); color: var(--accent-ink); }
+  .visit-you.no { background: var(--paper-raised); color: var(--ink-faint); }
+  .ua-cell { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { color: var(--ink-faint); font-size: 14px; }
+</style>
+
+<div id="site-nav"></div>
+<script src="nav.js"></script>
+
+<header class="page-head wrap">
+  <h1>Analytics</h1>
+  <p>The most recent 500 page loads — where they came from, and whether they look like you.</p>
+</header>
+
+<section class="wrap">
+  <div class="visits-wrap">
+    <div id="visits-container"><p class="empty">Loading…</p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Dhaval Patel · Central Jersey</div>
+</footer>
+
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+  const container = document.getElementById('visits-container');
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    });
+  }
+
+  function renderVisits(visits) {
+    if (visits.length === 0) {
+      container.innerHTML = '<p class="empty">No visits logged yet.</p>';
+      return;
+    }
+
+    const rows = visits
+      .map((v) => {
+        const location = [v.city, v.country].filter(Boolean).join(', ') || '—';
+        return `
+      <tr>
+        <td class="visit-time">${formatTime(v.created_at)}</td>
+        <td>${escapeHtml(v.path || '—')}</td>
+        <td>${escapeHtml(v.referrer || 'Direct / none')}</td>
+        <td>${escapeHtml(v.ip || '—')}</td>
+        <td>${escapeHtml(location)}</td>
+        <td class="ua-cell" title="${escapeHtml(v.user_agent || '')}">${escapeHtml(v.user_agent || '—')}</td>
+        <td><span class="visit-you ${v.authenticated ? 'yes' : 'no'}">${v.authenticated ? 'You' : 'Other'}</span></td>
+      </tr>`;
+      })
+      .join('');
+
+    container.innerHTML = `
+      <table class="visits">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Path</th>
+            <th>Referrer</th>
+            <th>IP</th>
+            <th>Location</th>
+            <th>User-Agent</th>
+            <th>Is it you?</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  async function loadVisits() {
+    const res = await fetch('/api/track-visit');
+    if (!res.ok) {
+      container.innerHTML = '<p class="empty">Could not load visits.</p>';
+      return;
+    }
+    renderVisits(await res.json());
+  }
+
+  loadVisits();
+</script>
+</body>
+</html>

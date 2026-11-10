@@ -1,8 +1,8 @@
 # dnpHome
 
 Dhaval Patel's personal site — a bio page plus a small set of side
-features (a blog, quotes, dad jokes, a private expense tracker, and a
-private workout log), deployed on Vercel.
+features (a blog, quotes, dad jokes, a private expense tracker, a
+private workout log, and private visit analytics), deployed on Vercel.
 
 ## Pages
 
@@ -14,6 +14,7 @@ private workout log), deployed on Vercel.
 | Dad Jokes | `dad-jokes.html` | Public to read; adding a joke requires the password. |
 | Finances | `finances.html` | Entirely behind the password — a personal expense tracker. |
 | Health | `health.html` | Entirely behind the password — a workout log (plus optional breakfast/lunch/dinner notes and sleep duration), viewed one Sunday–Saturday week at a time with Prev/Next navigation; add, edit, and delete all require the password. |
+| Analytics | `analytics.html` | Entirely behind the password — a log of page visits (path, referrer, IP, user-agent, geo, and whether the visitor was already authenticated), reached by clicking the visit-count badge on the home page. Logging a visit is public (every visitor triggers it); reading the log back requires the password. |
 
 There is one site password, set once as an environment variable and checked
 via a shared cookie session — see **Environment variables** below.
@@ -30,8 +31,8 @@ via a shared cookie session — see **Environment variables** below.
   never reaches the browser).
 - **Vercel Serverless Functions** (`api/*.js`, Node runtime) back the
   dynamic features — blog posts, comments, quotes, dad jokes, finances,
-  and the health log — each with its own Postgres table, auto-created on
-  first use.
+  the health log, and visit tracking — each with its own Postgres table,
+  auto-created on first use.
 - **Neon Postgres**, provisioned via Vercel's Storage/Marketplace
   integration, queried through `@neondatabase/serverless`.
 - **Vercel Analytics**, loaded via a plain `<script>` tag (this isn't a
@@ -42,9 +43,11 @@ via a shared cookie session — see **Environment variables** below.
 ```
 dnpHome/
 ├── index.html, blogs.html, post.html, all-posts.html,
-│   quotes.html, dad-jokes.html, finances.html, health.html   # pages
+│   quotes.html, dad-jokes.html, finances.html, health.html,
+│   analytics.html                                            # pages
 ├── styles.css           # shared design tokens, nav, footer, buttons
-├── nav.js                # shared top-nav/side-nav, injected per page
+├── nav.js                # shared top-nav/side-nav, injected per page; also
+│                            fires the visit-tracking beacon on every page
 ├── auth.js                # client-side inline password-prompt helper
 ├── middleware.js           # Edge Middleware: the site's password gate
 ├── api/                     # one serverless function per feature
@@ -53,7 +56,8 @@ dnpHome/
 │   ├── quotes.js
 │   ├── dad-jokes.js
 │   ├── transactions.js
-│   └── health-log.js
+│   ├── health-log.js
+│   └── track-visit.js
 ├── lib/                      # shared server-side helpers
 │   ├── db.js                   # Postgres connection helper
 │   └── session.js               # cookie/session check (used outside middleware)
@@ -67,8 +71,8 @@ Copy `.env.example` for the list. Set real values in the Vercel dashboard
 under **Project Settings → Environment Variables** — never commit them.
 
 - `SITE_PASSWORD` — the one password that gates Finances, Health,
-  publishing/editing on Blogs/Quotes/Dad Jokes, and any post marked
-  restricted.
+  Analytics, publishing/editing on Blogs/Quotes/Dad Jokes, and any post
+  marked restricted.
 - `DNP_DATABASE_URL` — the Neon Postgres connection string (provisioned via
   Vercel's Storage tab; named with a `DNP_` prefix because it was renamed
   after connecting the integration).
@@ -107,6 +111,9 @@ framework dependency. Coverage so far:
 - `tests/health-log.test.js` — validation (required fields, rejecting a
   non-positive duration) and CRUD behavior in `api/health-log.js`, using
   the same fake-`sql` approach.
+- `tests/track-visit.test.js` — that `api/track-visit.js` logs the right
+  ip/user-agent/geo fields from request headers and tolerates a minimal
+  body, using the same fake-`sql` approach.
 
 Every `api/*.js` handler accepts an optional third `sql` argument
 (`handler(req, res, sql)`), defaulting to a real Neon connection only when

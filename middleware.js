@@ -50,9 +50,10 @@ function loginPage(showError) {
 
 export const config = {
   // blogs.html / post.html / all-posts.html are intentionally NOT listed here —
-  // viewing posts is public. finances.html and health.html (whole pages) are
-  // fully private, and write methods on /api/* generally require the password.
-  matcher: ['/finances.html', '/health.html', '/api/(.*)'],
+  // viewing posts is public. finances.html, health.html, and analytics.html
+  // (whole pages) are fully private, and write methods on /api/* generally
+  // require the password.
+  matcher: ['/finances.html', '/health.html', '/analytics.html', '/api/(.*)'],
 };
 
 export default async function middleware(request) {
@@ -110,6 +111,13 @@ export default async function middleware(request) {
 
   // Comments are fully public — anyone can read or post them, no password.
   if (pathname === '/api/comments') {
+    return next();
+  }
+
+  // Logging a visit (POST) must work for every visitor, not just the site
+  // owner — that's the whole point of analytics.html. Reading the log back
+  // (GET) and analytics.html itself still require the password below.
+  if (pathname === '/api/track-visit' && request.method === 'POST') {
     return next();
   }
 
