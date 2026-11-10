@@ -40,7 +40,7 @@
     display: grid;
     grid-template-columns: 110px 90px 1fr 50px 28px;
     gap: 12px;
-    align-items: center;
+    align-items: start;
     padding-block: 10px;
     border-bottom: 1px solid var(--line);
     font-size: 14.5px;
@@ -48,6 +48,19 @@
   .health-date { font-family: var(--mono); font-size: 12.5px; color: var(--ink-faint); }
   .health-duration { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
   .health-desc { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .health-extra {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  .health-extra span strong {
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
   .health-edit-btn {
     background: none;
     border: none;
@@ -69,10 +82,11 @@
   }
   .health-delete:hover { color: #c0392b; }
   @media (max-width: 700px) {
-    .health-row { grid-template-columns: 1fr 1fr; grid-template-areas: "date dur" "desc desc" "edit del"; row-gap: 6px; }
+    .health-row { grid-template-columns: 1fr 1fr; grid-template-areas: "date dur" "desc desc" "extra extra" "edit del"; row-gap: 6px; }
     .health-date { grid-area: date; }
     .health-duration { grid-area: dur; }
     .health-desc { grid-area: desc; white-space: normal; }
+    .health-extra { grid-area: extra; }
     .health-edit-btn { grid-area: edit; }
     .health-delete { grid-area: del; text-align: right; }
   }
@@ -81,7 +95,7 @@
     display: grid;
     grid-template-columns: 130px 110px 1fr auto;
     gap: 10px;
-    align-items: center;
+    align-items: start;
     padding-block: 10px;
     border-bottom: 1px solid var(--line);
   }
@@ -97,9 +111,27 @@
     box-sizing: border-box;
   }
   .health-edit-actions { display: flex; gap: 6px; }
+  .health-edit-extra {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto auto;
+    gap: 10px;
+  }
+  .health-edit-extra label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .health-edit-extra .sleep-field { display: flex; flex-direction: column; }
+  .health-edit-extra .sleep-field input { width: 70px; }
   @media (max-width: 700px) {
-    .health-edit-row { grid-template-columns: 1fr 1fr; grid-template-areas: "date dur" "desc desc" "actions actions"; row-gap: 8px; }
+    .health-edit-row { grid-template-columns: 1fr 1fr; grid-template-areas: "date dur" "desc desc" "extra extra" "actions actions"; row-gap: 8px; }
     .health-edit-actions { grid-area: actions; }
+    .health-edit-extra { grid-area: extra; grid-template-columns: 1fr 1fr; }
   }
 
   .add-form {
@@ -128,6 +160,9 @@
     font-size: 14.5px;
     box-sizing: border-box;
   }
+  .add-form .full-width { grid-column: 1 / -1; }
+  .add-form .sleep-field { display: flex; flex-direction: column; }
+  .add-form .sleep-field input { max-width: 100px; }
   @media (max-width: 700px) {
     .add-form { grid-template-columns: 1fr 1fr; }
   }
@@ -171,6 +206,26 @@
     <div>
       <button type="submit" class="btn btn-primary">Add</button>
     </div>
+    <div>
+      <label for="add-breakfast">Breakfast</label>
+      <input type="text" id="add-breakfast" maxlength="100" placeholder="optional">
+    </div>
+    <div>
+      <label for="add-lunch">Lunch</label>
+      <input type="text" id="add-lunch" maxlength="100" placeholder="optional">
+    </div>
+    <div class="full-width">
+      <label for="add-dinner">Dinner</label>
+      <input type="text" id="add-dinner" maxlength="100" placeholder="optional">
+    </div>
+    <div class="sleep-field">
+      <label for="add-sleep-hours">Sleep (hrs)</label>
+      <input type="number" id="add-sleep-hours" min="0" max="23" step="1" placeholder="optional">
+    </div>
+    <div class="sleep-field">
+      <label for="add-sleep-minutes">Sleep (min)</label>
+      <input type="number" id="add-sleep-minutes" min="0" max="59" step="1" placeholder="optional">
+    </div>
   </form>
   <p class="form-error" id="form-error"></p>
 </section>
@@ -187,6 +242,11 @@
   const addDate = document.getElementById('add-date');
   const addDuration = document.getElementById('add-duration');
   const addDescription = document.getElementById('add-description');
+  const addBreakfast = document.getElementById('add-breakfast');
+  const addLunch = document.getElementById('add-lunch');
+  const addDinner = document.getElementById('add-dinner');
+  const addSleepHours = document.getElementById('add-sleep-hours');
+  const addSleepMinutes = document.getElementById('add-sleep-minutes');
   const formError = document.getElementById('form-error');
 
   let allRecords = [];
@@ -267,6 +327,23 @@
     weekRecords.forEach((record) => listEl.appendChild(renderRow(record)));
   }
 
+  function formatSleep(record) {
+    if (record.sleep_hours == null && record.sleep_minutes == null) return '';
+    const h = record.sleep_hours || 0;
+    const m = record.sleep_minutes || 0;
+    return `${h}h ${m}m`;
+  }
+
+  function renderExtra(record) {
+    const items = [];
+    if (record.breakfast) items.push(`<span><strong>Breakfast:</strong> ${escapeHtml(record.breakfast)}</span>`);
+    if (record.lunch) items.push(`<span><strong>Lunch:</strong> ${escapeHtml(record.lunch)}</span>`);
+    if (record.dinner) items.push(`<span><strong>Dinner:</strong> ${escapeHtml(record.dinner)}</span>`);
+    const sleep = formatSleep(record);
+    if (sleep) items.push(`<span><strong>Sleep:</strong> ${sleep}</span>`);
+    return items.length ? `<div class="health-extra">${items.join('')}</div>` : '';
+  }
+
   function renderRow(record) {
     const row = document.createElement('div');
     row.className = 'health-row';
@@ -277,6 +354,7 @@
       <span class="health-desc">${escapeHtml(record.description)}</span>
       <button type="button" class="health-edit-btn">Edit</button>
       <button type="button" class="health-delete" title="Delete">✕</button>
+      ${renderExtra(record)}
     `;
 
     row.querySelector('.health-edit-btn').addEventListener('click', () => {
@@ -302,8 +380,35 @@
         <button type="button" class="btn btn-primary edit-save">Save</button>
         <button type="button" class="btn btn-ghost edit-cancel">Cancel</button>
       </div>
+      <div class="health-edit-extra">
+        <div>
+          <label>Breakfast</label>
+          <input type="text" class="edit-breakfast" maxlength="100">
+        </div>
+        <div>
+          <label>Lunch</label>
+          <input type="text" class="edit-lunch" maxlength="100">
+        </div>
+        <div>
+          <label>Dinner</label>
+          <input type="text" class="edit-dinner" maxlength="100">
+        </div>
+        <div class="sleep-field">
+          <label>Sleep (hrs)</label>
+          <input type="number" class="edit-sleep-hours" min="0" max="23" step="1">
+        </div>
+        <div class="sleep-field">
+          <label>Sleep (min)</label>
+          <input type="number" class="edit-sleep-minutes" min="0" max="59" step="1">
+        </div>
+      </div>
     `;
     row.querySelector('.edit-description').value = record.description;
+    row.querySelector('.edit-breakfast').value = record.breakfast || '';
+    row.querySelector('.edit-lunch').value = record.lunch || '';
+    row.querySelector('.edit-dinner').value = record.dinner || '';
+    row.querySelector('.edit-sleep-hours').value = record.sleep_hours ?? '';
+    row.querySelector('.edit-sleep-minutes').value = record.sleep_minutes ?? '';
 
     row.querySelector('.edit-cancel').addEventListener('click', () => {
       row.replaceWith(renderRow(record));
@@ -313,16 +418,22 @@
       const date = row.querySelector('.edit-date').value;
       const duration_minutes = row.querySelector('.edit-duration').value;
       const description = row.querySelector('.edit-description').value.trim();
+      const breakfast = row.querySelector('.edit-breakfast').value.trim();
+      const lunch = row.querySelector('.edit-lunch').value.trim();
+      const dinner = row.querySelector('.edit-dinner').value.trim();
+      const sleep_hours = row.querySelector('.edit-sleep-hours').value;
+      const sleep_minutes = row.querySelector('.edit-sleep-minutes').value;
 
       if (!date || !duration_minutes || !description) return;
 
       const res = await fetch(`/api/health-log?id=${record.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, duration_minutes, description }),
+        body: JSON.stringify({ date, duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes }),
       });
 
       if (res.ok) loadAll();
+      else formError.textContent = (await res.json().catch(() => ({}))).error || 'Could not save that workout.';
     });
 
     return row;
@@ -347,6 +458,11 @@
     const date = addDate.value;
     const duration_minutes = addDuration.value;
     const description = addDescription.value.trim();
+    const breakfast = addBreakfast.value.trim();
+    const lunch = addLunch.value.trim();
+    const dinner = addDinner.value.trim();
+    const sleep_hours = addSleepHours.value;
+    const sleep_minutes = addSleepMinutes.value;
 
     if (!date || !duration_minutes || !description) {
       formError.textContent = 'Date, minutes, and a description are all required.';
@@ -356,11 +472,11 @@
     const res = await fetch('/api/health-log', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, duration_minutes, description }),
+      body: JSON.stringify({ date, duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes }),
     });
 
     if (!res.ok) {
-      formError.textContent = 'Could not save that workout.';
+      formError.textContent = (await res.json().catch(() => ({}))).error || 'Could not save that workout.';
       return;
     }
 

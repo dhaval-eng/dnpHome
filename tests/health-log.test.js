@@ -8,8 +8,9 @@ import { createFakeSql, createMockRes } from './helpers.js';
 function fakeSqlWithRows(rows) {
   return createFakeSql([
     { match: (t) => t.includes('CREATE TABLE'), result: [] },
+    { match: (t) => t.includes('ALTER TABLE'), result: [] },
     {
-      match: (t) => t.includes('SELECT id, date, duration_minutes, description, created_at') && t.includes('ORDER BY'),
+      match: (t) => t.includes('SELECT id, date, duration_minutes, description') && t.includes('ORDER BY'),
       result: rows,
     },
     {
@@ -20,6 +21,11 @@ function fakeSqlWithRows(rows) {
           date: values[0],
           duration_minutes: values[1],
           description: values[2],
+          breakfast: values[3],
+          lunch: values[4],
+          dinner: values[5],
+          sleep_hours: values[6],
+          sleep_minutes: values[7],
           created_at: '2026-01-01T00:00:00Z',
         };
         rows.push(row);
@@ -29,12 +35,17 @@ function fakeSqlWithRows(rows) {
     {
       match: (t) => t.includes('UPDATE health_log'),
       result: (values) => {
-        const [date, duration_minutes, description, id] = values;
+        const [date, duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes, id] = values;
         const existing = rows.find((r) => String(r.id) === String(id));
         if (!existing) return [];
         existing.date = date;
         existing.duration_minutes = duration_minutes;
         existing.description = description;
+        existing.breakfast = breakfast;
+        existing.lunch = lunch;
+        existing.dinner = dinner;
+        existing.sleep_hours = sleep_hours;
+        existing.sleep_minutes = sleep_minutes;
         return [existing];
       },
     },
@@ -93,6 +104,66 @@ test('POST creates a record', async () => {
   assert.equal(res.body.date, '2026-11-02');
   assert.equal(res.body.duration_minutes, 30);
   assert.equal(res.body.description, 'Run');
+});
+
+test('POST accepts the optional meal and sleep fields', async () => {
+  const res = createMockRes();
+  await handler(
+    makeReq({
+      method: 'POST',
+      body: {
+        date: '2026-11-02',
+        duration_minutes: 30,
+        description: 'Run',
+        breakfast: 'Oatmeal',
+        lunch: 'Salad',
+        dinner: 'Pasta',
+        sleep_hours: 7,
+        sleep_minutes: 30,
+      },
+    }),
+    res,
+    fakeSqlWithRows([])
+  );
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.breakfast, 'Oatmeal');
+  assert.equal(res.body.lunch, 'Salad');
+  assert.equal(res.body.dinner, 'Pasta');
+  assert.equal(res.body.sleep_hours, 7);
+  assert.equal(res.body.sleep_minutes, 30);
+});
+
+test('POST allows the optional meal and sleep fields to be omitted (null)', async () => {
+  const res = createMockRes();
+  await handler(
+    makeReq({ method: 'POST', body: { date: '2026-11-02', duration_minutes: 30, description: 'Run' } }),
+    res,
+    fakeSqlWithRows([])
+  );
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.breakfast, null);
+  assert.equal(res.body.sleep_hours, null);
+  assert.equal(res.body.sleep_minutes, null);
+});
+
+test('POST rejects a meal field over 100 characters', async () => {
+  const res = createMockRes();
+  await handler(
+    makeReq({ method: 'POST', body: { date: '2026-11-02', duration_minutes: 30, description: 'Run', breakfast: 'x'.repeat(101) } }),
+    res,
+    fakeSqlWithRows([])
+  );
+  assert.equal(res.statusCode, 400);
+});
+
+test('POST rejects an out-of-range sleep value', async () => {
+  const res = createMockRes();
+  await handler(
+    makeReq({ method: 'POST', body: { date: '2026-11-02', duration_minutes: 30, description: 'Run', sleep_minutes: 90 } }),
+    res,
+    fakeSqlWithRows([])
+  );
+  assert.equal(res.statusCode, 400);
 });
 
 test('PUT updates an existing record', async () => {
