@@ -197,11 +197,11 @@
     </div>
     <div>
       <label for="add-duration">Minutes</label>
-      <input type="number" id="add-duration" min="1" step="1" required>
+      <input type="number" id="add-duration" min="1" step="1" placeholder="optional">
     </div>
     <div>
       <label for="add-description">Class / exercise(s)</label>
-      <input type="text" id="add-description" placeholder="e.g. 5k run, upper body strength" required>
+      <input type="text" id="add-description" placeholder="optional — leave blank on a rest day">
     </div>
     <div>
       <button type="submit" class="btn btn-primary">Add</button>
@@ -345,13 +345,14 @@
   }
 
   function renderRow(record) {
+    const hasWorkout = record.duration_minutes != null || record.description;
     const row = document.createElement('div');
     row.className = 'health-row';
     row.dataset.id = record.id;
     row.innerHTML = `
       <span class="health-date">${formatShort(parseLocalDate(record.date))}</span>
-      <span class="health-duration">${record.duration_minutes} min</span>
-      <span class="health-desc">${escapeHtml(record.description)}</span>
+      <span class="health-duration">${record.duration_minutes != null ? `${record.duration_minutes} min` : ''}</span>
+      <span class="health-desc">${hasWorkout ? escapeHtml(record.description || '') : 'Rest day'}</span>
       <button type="button" class="health-edit-btn">Edit</button>
       <button type="button" class="health-delete" title="Delete">✕</button>
       ${renderExtra(record)}
@@ -374,8 +375,8 @@
     row.className = 'health-edit-row';
     row.innerHTML = `
       <input type="date" class="edit-date" value="${record.date}" required>
-      <input type="number" class="edit-duration" min="1" step="1" value="${record.duration_minutes}" required>
-      <input type="text" class="edit-description" required>
+      <input type="number" class="edit-duration" min="1" step="1" placeholder="optional">
+      <input type="text" class="edit-description" placeholder="optional">
       <div class="health-edit-actions">
         <button type="button" class="btn btn-primary edit-save">Save</button>
         <button type="button" class="btn btn-ghost edit-cancel">Cancel</button>
@@ -403,7 +404,8 @@
         </div>
       </div>
     `;
-    row.querySelector('.edit-description').value = record.description;
+    row.querySelector('.edit-duration').value = record.duration_minutes ?? '';
+    row.querySelector('.edit-description').value = record.description || '';
     row.querySelector('.edit-breakfast').value = record.breakfast || '';
     row.querySelector('.edit-lunch').value = record.lunch || '';
     row.querySelector('.edit-dinner').value = record.dinner || '';
@@ -424,7 +426,7 @@
       const sleep_hours = row.querySelector('.edit-sleep-hours').value;
       const sleep_minutes = row.querySelector('.edit-sleep-minutes').value;
 
-      if (!date || !duration_minutes || !description) return;
+      if (!date) return;
 
       const res = await fetch(`/api/health-log?id=${record.id}`, {
         method: 'PUT',
@@ -464,8 +466,8 @@
     const sleep_hours = addSleepHours.value;
     const sleep_minutes = addSleepMinutes.value;
 
-    if (!date || !duration_minutes || !description) {
-      formError.textContent = 'Date, minutes, and a description are all required.';
+    if (!date) {
+      formError.textContent = 'Date is required.';
       return;
     }
 

@@ -7,8 +7,8 @@ async function ensureTable(sql) {
     CREATE TABLE IF NOT EXISTS health_log (
       id SERIAL PRIMARY KEY,
       date DATE NOT NULL,
-      duration_minutes INTEGER NOT NULL,
-      description TEXT NOT NULL,
+      duration_minutes INTEGER,
+      description TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
@@ -17,6 +17,9 @@ async function ensureTable(sql) {
   await sql`ALTER TABLE health_log ADD COLUMN IF NOT EXISTS dinner TEXT`;
   await sql`ALTER TABLE health_log ADD COLUMN IF NOT EXISTS sleep_hours INTEGER`;
   await sql`ALTER TABLE health_log ADD COLUMN IF NOT EXISTS sleep_minutes INTEGER`;
+  // Rest days may log only meals/sleep, with no workout at all.
+  await sql`ALTER TABLE health_log ALTER COLUMN duration_minutes DROP NOT NULL`;
+  await sql`ALTER TABLE health_log ALTER COLUMN description DROP NOT NULL`;
 }
 
 // Meal fields are free text, optional, capped at 100 characters.
@@ -40,11 +43,30 @@ function normalizeSleepPart(value, fieldName, max) {
   return n;
 }
 
-function parseOptionalFields(body) {
+// Duration is optional (a rest day has none), but if given must be a
+// positive number of minutes.
+function normalizeDuration(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = Number(value);
+  if (Number.isNaN(n) || n <= 0) {
+    throw new Error('duration in minutes must be a positive number');
+  }
+  return n;
+}
+
+function normalizeDescription(value) {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed || null;
+}
+
+function parseFields(body) {
+  const duration_minutes = normalizeDuration(body.duration_minutes);
+  const description = normalizeDescription(body.description);
   const [breakfast, lunch, dinner] = MEAL_FIELDS.map((field) => normalizeMeal(body[field], field));
   const sleep_hours = normalizeSleepPart(body.sleep_hours, 'sleep hours', 23);
   const sleep_minutes = normalizeSleepPart(body.sleep_minutes, 'sleep minutes', 59);
-  return { breakfast, lunch, dinner, sleep_hours, sleep_minutes };
+  return { duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes };
 }
 
 export default async function handler(req, res, sql) {
@@ -67,24 +89,22 @@ export default async function handler(req, res, sql) {
   }
 
   if (req.method === 'POST') {
-    const { date, duration_minutes, description } = req.body || {};
-    const numericDuration = Number(duration_minutes);
-    const trimmedDescription = (description || '').trim();
+    const { date } = req.body || {};
 
-    if (!date || !duration_minutes || Number.isNaN(numericDuration) || numericDuration <= 0 || !trimmedDescription) {
-      return res.status(400).json({ error: 'date, a positive duration in minutes, and a description are required' });
+    if (!date) {
+      return res.status(400).json({ error: 'date is required' });
     }
 
-    let optional;
+    let fields;
     try {
-      optional = parseOptionalFields(req.body || {});
+      fields = parseFields(req.body || {});
     } catch (err) {
       return res.status(400).json({ error: err.message });
     }
 
     const rows = await sql`
       INSERT INTO health_log (date, duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes)
-      VALUES (${date}, ${numericDuration}, ${trimmedDescription}, ${optional.breakfast}, ${optional.lunch}, ${optional.dinner}, ${optional.sleep_hours}, ${optional.sleep_minutes})
+      VALUES (${date}, ${fields.duration_minutes}, ${fields.description}, ${fields.breakfast}, ${fields.lunch}, ${fields.dinner}, ${fields.sleep_hours}, ${fields.sleep_minutes})
       RETURNING id, date, duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes, created_at
     `;
     return res.status(201).json(rows[0]);
@@ -92,29 +112,27 @@ export default async function handler(req, res, sql) {
 
   if (req.method === 'PUT') {
     const { id } = req.query;
-    const { date, duration_minutes, description } = req.body || {};
-    const numericDuration = Number(duration_minutes);
-    const trimmedDescription = (description || '').trim();
+    const { date } = req.body || {};
 
     if (!id) {
       return res.status(400).json({ error: 'id is required' });
     }
-    if (!date || !duration_minutes || Number.isNaN(numericDuration) || numericDuration <= 0 || !trimmedDescription) {
-      return res.status(400).json({ error: 'date, a positive duration in minutes, and a description are required' });
+    if (!date) {
+      return res.status(400).json({ error: 'date is required' });
     }
 
-    let optional;
+    let fields;
     try {
-      optional = parseOptionalFields(req.body || {});
+      fields = parseFields(req.body || {});
     } catch (err) {
       return res.status(400).json({ error: err.message });
     }
 
     const rows = await sql`
       UPDATE health_log
-      SET date = ${date}, duration_minutes = ${numericDuration}, description = ${trimmedDescription},
-          breakfast = ${optional.breakfast}, lunch = ${optional.lunch}, dinner = ${optional.dinner},
-          sleep_hours = ${optional.sleep_hours}, sleep_minutes = ${optional.sleep_minutes}
+      SET date = ${date}, duration_minutes = ${fields.duration_minutes}, description = ${fields.description},
+          breakfast = ${fields.breakfast}, lunch = ${fields.lunch}, dinner = ${fields.dinner},
+          sleep_hours = ${fields.sleep_hours}, sleep_minutes = ${fields.sleep_minutes}
       WHERE id = ${id}
       RETURNING id, date, duration_minutes, description, breakfast, lunch, dinner, sleep_hours, sleep_minutes, created_at
     `;

@@ -77,7 +77,7 @@ test('GET lists all records', async () => {
   assert.equal(res.body.length, 2);
 });
 
-test('POST requires date, a positive duration, and a description', async () => {
+test('POST requires date', async () => {
   const res = createMockRes();
   await handler(makeReq({ method: 'POST', body: { date: '', duration_minutes: '', description: '' } }), res, fakeSqlWithRows([]));
   assert.equal(res.statusCode, 400);
@@ -91,6 +91,22 @@ test('POST rejects a zero or negative duration', async () => {
     fakeSqlWithRows([])
   );
   assert.equal(res.statusCode, 400);
+});
+
+test('POST creates a rest-day record with no workout fields, only meals and sleep', async () => {
+  const res = createMockRes();
+  await handler(
+    makeReq({
+      method: 'POST',
+      body: { date: '2026-11-02', breakfast: 'Oatmeal', sleep_hours: 8, sleep_minutes: 0 },
+    }),
+    res,
+    fakeSqlWithRows([])
+  );
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.duration_minutes, null);
+  assert.equal(res.body.description, null);
+  assert.equal(res.body.breakfast, 'Oatmeal');
 });
 
 test('POST creates a record', async () => {
