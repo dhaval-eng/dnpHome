@@ -255,8 +255,7 @@
   function startOfWeek(date) {
     const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const day = d.getDay(); // 0 = Sunday ... 6 = Saturday
-    const diff = day === 0 ? -6 : 1 - day; // shift back to Monday
-    d.setDate(d.getDate() + diff);
+    d.setDate(d.getDate() - day); // shift back to Sunday
     return d;
   }
 

@@ -13,7 +13,7 @@ private workout log), deployed on Vercel.
 | Quotes | `quotes.html` | Public to read; adding a quote requires the password. |
 | Dad Jokes | `dad-jokes.html` | Public to read; adding a joke requires the password. |
 | Finances | `finances.html` | Entirely behind the password — a personal expense tracker. |
-| Health | `health.html` | Entirely behind the password — a workout log (plus optional breakfast/lunch/dinner notes and sleep duration), viewed one Monday–Sunday week at a time with Prev/Next navigation; add, edit, and delete all require the password. |
+| Health | `health.html` | Entirely behind the password — a workout log (plus optional breakfast/lunch/dinner notes and sleep duration), viewed one Sunday–Saturday week at a time with Prev/Next navigation; add, edit, and delete all require the password. |
 
 There is one site password, set once as an environment variable and checked
 via a shared cookie session — see **Environment variables** below.
